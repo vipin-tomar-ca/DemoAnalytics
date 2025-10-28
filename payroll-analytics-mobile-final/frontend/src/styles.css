@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mobile-first card styling */
+.card { @apply bg-white rounded-2xl shadow p-4; }
+.kpi { @apply flex flex-col items-start justify-center gap-1; }
+.kpi .label { @apply text-xs text-neutral-500; }
+.kpi .value { @apply text-2xl font-semibold; }
+
+.filterbar { @apply flex flex-wrap gap-2 items-center; }
+.filterbar select, .filterbar input {
+  @apply border rounded-lg px-2 py-1 text-sm;
+}
