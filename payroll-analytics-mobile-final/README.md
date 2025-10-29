@@ -2,6 +2,17 @@
 
 Mobile-first payroll analytics (Visier-style) with advanced charts, map⇄bar morphing, filters, multi-tenant header, and **SQLite DB** seeded with demo data.
 
+## Screenshots
+
+### Dashboard Overview
+![Dashboard Overview](Screenshot%202025-10-29%20at%202.03.12%E2%80%AFAM.png)
+
+### Cost & Efficiency Charts
+![Cost & Efficiency Charts](Screenshot%202025-10-29%20at%202.03.38%E2%80%AFAM.png)
+
+### Equity & Turnover Charts
+![Equity & Turnover Charts](Screenshot%202025-10-29%20at%202.04.16%E2%80%AFAM.png)
+
 ## Demo Login
 _Authentication is currently disabled._
 
@@ -122,3 +133,4 @@ This ensures data integrity and prevents foreign key constraint errors during se
     *   Run `dotnet build` in `backend/Api` to see detailed compilation errors.
     *   Pay attention to `CS0234` (missing namespace), `CS1061` (missing property/method), and `CS8618`/`CS8602`/`CS8603` (nullable reference type warnings/errors).
 *   **`FOREIGN KEY constraint failed` errors during seeding**: This indicates a problem with the order or completeness of data insertion. Ensure `Seed.cs` is correctly implementing the two-pass seeding strategy. You may need to drop the database, delete migrations, and create a new migration (`dotnet ef database drop --force`, `dotnet ef migrations remove`, `dotnet ef migrations add NewMigration`, `dotnet ef database update`) after fixing `Seed.cs`.
+
