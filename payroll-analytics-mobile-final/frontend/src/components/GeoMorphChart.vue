@@ -13,11 +13,12 @@ import { ref } from 'vue'
 import { fetchGeoHeadcount } from '../api'
 import { useFiltersReload } from '../composables/useFiltersReload'
 import VChart from 'vue-echarts'
-import { use } from 'echarts/core'
+import { use, graphic, registerMap } from 'echarts/core'
 import { MapChart, BarChart } from 'echarts/charts'
 import { GeoComponent, TooltipComponent, VisualMapComponent, GridComponent, DatasetComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import * as echarts from 'echarts/core' // Import echarts directly
+import { chartPalette, tooltipStyle, axisLabelColor } from '../charts/theme'
+import { fallbackGeoHeadcount } from '../data/fallbacks'
 
 use([MapChart, BarChart, GeoComponent, TooltipComponent, VisualMapComponent, GridComponent, DatasetComponent, CanvasRenderer])
 
@@ -45,37 +46,109 @@ const canadaGeoJson = {
 }
 
 async function load() {
-  // const echarts = (await import('echarts')).default // Removed dynamic import
-  echarts.registerMap('CANADA_SIMPLIFIED', canadaGeoJson as any)
+  registerMap('CANADA_SIMPLIFIED', canadaGeoJson as any)
 
-  const rows = await fetchGeoHeadcount()
+  const response = await fetchGeoHeadcount().catch((err) => {
+    console.error('Failed to fetch geo headcount data', err)
+    return null
+  })
+  const fallback = fallbackGeoHeadcount()
+  const rows = Array.isArray(response) && response.length ? response : fallback
+  if (rows === fallback) console.warn('Geo headcount response invalid, using fallback data')
   const dataset = [{ id: 'geoHeadcount', source: rows }]
+  const maxValue = rows.length > 0 ? Math.max(...rows.map((r: any) => r.value)) : 1
 
   const makeMap = () => ({
     dataset,
-    tooltip: { trigger: 'item' },
-    visualMap: { left: 0, min: 0, max: rows.length > 0 ? Math.max(...rows.map((r:any)=>r.value)) : 1, calculable: true },
+    tooltip: {
+      ...tooltipStyle,
+      trigger: 'item',
+      axisPointer: undefined,
+      formatter: (params: any) => `<strong>${params.name}</strong><br/>Headcount: ${params.value?.toLocaleString?.() ?? params.value}`
+    },
+    visualMap: {
+      left: 0,
+      min: 0,
+      max: maxValue,
+      calculable: true,
+      textStyle: { color: axisLabelColor },
+      inRange: { color: ['#e0f2fe', '#2563eb'] },
+      itemWidth: 18,
+      itemHeight: 180
+    },
     series: [{
       name: 'Headcount',
       type: 'map',
       map: 'CANADA_SIMPLIFIED',
       nameProperty: 'name',
       universalTransition: true,
+      roam: true,
+      zoom: 0.95,
+      itemStyle: {
+        borderColor: '#ffffff',
+        borderWidth: 1.2,
+        shadowBlur: 10,
+        shadowColor: 'rgba(15,23,42,0.1)'
+      },
+      emphasis: {
+        itemStyle: { shadowBlur: 20, shadowColor: 'rgba(37,99,235,0.35)' },
+        label: { show: true, color: '#0f172a', fontWeight: 'bold' }
+      },
       encode: { itemName: 'name', value: 'value' }
     }]
   })
 
-  const makeBar = () => ({
-    dataset,
-    grid: { left: 60, right: 10, top: 20, bottom: 10 },
-    xAxis: { type: 'value' },
-    yAxis: { type: 'category' },
-    series: [{
-      type: 'bar',
-      universalTransition: true,
-      encode: { x: 'value', y: 'name' }
-    }]
-  })
+  const makeBar = () => {
+    const barRows = [...rows].sort((a, b) => a.value - b.value)
+    const categories = barRows.map(r => r.name)
+    const values = barRows.map(r => r.value)
+    return {
+      grid: { left: 120, right: 32, top: 32, bottom: 20 },
+      tooltip: {
+        ...tooltipStyle,
+        trigger: 'item',
+        axisPointer: undefined,
+        formatter: (params: any) => {
+          if (!params) return ''
+          const row = barRows[params.dataIndex]
+          return `<strong>${row.name}</strong><br/>Headcount: ${row.value.toLocaleString()}`
+        }
+      },
+      xAxis: {
+        type: 'value',
+        axisLabel: { color: axisLabelColor, formatter: (val: number) => val.toLocaleString() },
+        splitLine: { lineStyle: { color: '#e2e8f0' } }
+      },
+      yAxis: {
+        type: 'category',
+        inverse: true,
+        data: categories,
+        axisLabel: { color: '#334155', fontSize: 12 },
+        axisLine: { lineStyle: { color: '#e2e8f0' } }
+      },
+      series: [{
+        type: 'bar',
+        data: values,
+        universalTransition: true,
+        itemStyle: {
+          borderRadius: [0, 10, 10, 0],
+          color: new graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: chartPalette[0] },
+            { offset: 1, color: chartPalette[1] }
+          ])
+        },
+        label: {
+          show: true,
+          position: 'right',
+          color: '#0f172a',
+          formatter: (params: any) => {
+            const value = values[params.dataIndex] ?? 0
+            return Number(value).toLocaleString()
+          }
+        }
+      }]
+    }
+  }
 
   option.value = current.value === 'map' ? makeMap() : makeBar()
 
