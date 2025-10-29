@@ -6,19 +6,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { ScatterChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import axios from 'axios'
+import { fetchCompCompetitiveness } from '../../api'
+import { useFiltersReload } from '../../composables/useFiltersReload'
 
 use([ScatterChart, GridComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
 const option = ref<any>({})
 
 async function load() {
-  const { data } = await axios.get('/api/comp/competitiveness')
+  const data = await fetchCompCompetitiveness()
   option.value = {
     grid: { left: 45, right: 10, top: 20, bottom: 40 },
     tooltip: { trigger: 'item', formatter: p => `Tenure: ${p.value[0]} yrs<br/>Compa-Ratio: ${p.value[1]}<br/>Level: ${p.value[2]}` },
@@ -32,7 +33,7 @@ async function load() {
     }]
   }
 }
-onMounted(load)
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>

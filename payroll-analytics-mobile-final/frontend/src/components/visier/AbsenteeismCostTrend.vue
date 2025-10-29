@@ -6,19 +6,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { LineChart, BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import axios from 'axios'
+import { fetchCostsAbsenteeism } from '../../api'
+import { useFiltersReload } from '../../composables/useFiltersReload'
 
 use([LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 const option = ref<any>({})
 
 async function load() {
-  const { data } = await axios.get('/api/costs/absenteeism')
+  const data = await fetchCostsAbsenteeism()
   option.value = {
     grid: { left: 40, right: 10, top: 20, bottom: 30 },
     tooltip: { trigger: 'axis' },
@@ -31,7 +32,7 @@ async function load() {
     ]
   }
 }
-onMounted(load)
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>

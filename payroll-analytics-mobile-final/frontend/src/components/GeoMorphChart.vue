@@ -9,13 +9,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { fetchGeoHeadcount } from '../api'
+import { useFiltersReload } from '../composables/useFiltersReload'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { MapChart, BarChart } from 'echarts/charts'
 import { GeoComponent, TooltipComponent, VisualMapComponent, GridComponent, DatasetComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
+import * as echarts from 'echarts/core' // Import echarts directly
 
 use([MapChart, BarChart, GeoComponent, TooltipComponent, VisualMapComponent, GridComponent, DatasetComponent, CanvasRenderer])
 
@@ -43,7 +45,7 @@ const canadaGeoJson = {
 }
 
 async function load() {
-  const echarts = (await import('echarts')).default
+  // const echarts = (await import('echarts')).default // Removed dynamic import
   echarts.registerMap('CANADA_SIMPLIFIED', canadaGeoJson as any)
 
   const rows = await fetchGeoHeadcount()
@@ -52,7 +54,7 @@ async function load() {
   const makeMap = () => ({
     dataset,
     tooltip: { trigger: 'item' },
-    visualMap: { left: 0, min: 0, max: Math.max(...rows.map((r:any)=>r.value)), calculable: true },
+    visualMap: { left: 0, min: 0, max: rows.length > 0 ? Math.max(...rows.map((r:any)=>r.value)) : 1, calculable: true },
     series: [{
       name: 'Headcount',
       type: 'map',
@@ -83,10 +85,7 @@ async function load() {
   }
 }
 
-onMounted(() => {
-  load()
-  window.addEventListener('filters.changed', load)
-})
+useFiltersReload(load)
 
 function toggle() { (toggle as any).impl?.() }
 </script>

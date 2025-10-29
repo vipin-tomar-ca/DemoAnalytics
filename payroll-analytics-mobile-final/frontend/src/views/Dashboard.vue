@@ -68,6 +68,7 @@ import HeadcountTrend from '../components/HeadcountTrend.vue'
 import GeoMorphChart from '../components/GeoMorphChart.vue'
 import TimeHeatmap from '../components/TimeHeatmap.vue'
 import CompensationBox from '../components/CompensationBox.vue'
+import { emitFiltersChanged } from '../composables/useFiltersReload'
 
 import TcowOverview from '../components/visier/TcowOverview.vue'
 import BudgetVariance from '../components/visier/BudgetVariance.vue'
@@ -83,11 +84,10 @@ const filters = useFilters()
 const provinces = ['Ontario','Quebec','British Columbia','Alberta','Manitoba','Saskatchewan','Nova Scotia','New Brunswick','Newfoundland and Labrador','Prince Edward Island','Yukon','Northwest Territories','Nunavut']
 
 function refresh() {
-  window.dispatchEvent(new Event('filters.changed'))
+  emitFiltersChanged()
 }
 
 import { useAuth } from '../stores/auth'
 const auth = useAuth()
 function logout(){ auth.logout(); window.location.href='/login' }
 </script>
-

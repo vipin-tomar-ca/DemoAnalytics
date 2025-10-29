@@ -6,19 +6,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import axios from 'axios'
+import { fetchEquityPayGap } from '../../api'
+import { useFiltersReload } from '../../composables/useFiltersReload'
 
 use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 const option = ref<any>({})
 
 async function load() {
-  const { data } = await axios.get('/api/equity/paygap')
+  const data = await fetchEquityPayGap()
   // Waterfall-style using positive/negative bars with a running total
   option.value = {
     grid: { left: 50, right: 10, top: 20, bottom: 40 },
@@ -32,7 +33,7 @@ async function load() {
     }]
   }
 }
-onMounted(load)
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>

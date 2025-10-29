@@ -6,8 +6,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { fetchTimeHeatmap } from '../api'
+import { useFiltersReload } from '../composables/useFiltersReload'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { HeatmapChart } from 'echarts/charts'
@@ -29,10 +30,7 @@ async function load() {
   }
 }
 
-onMounted(() => {
-  load()
-  window.addEventListener('filters.changed', load)
-})
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>

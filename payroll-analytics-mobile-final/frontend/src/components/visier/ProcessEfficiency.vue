@@ -6,19 +6,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { GaugeChart } from 'echarts/charts'
 import { TooltipComponent, TitleComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import axios from 'axios'
+import { fetchProcessEfficiency } from '../../api'
+import { useFiltersReload } from '../../composables/useFiltersReload'
 
 use([GaugeChart, TooltipComponent, TitleComponent, CanvasRenderer])
 const option = ref<any>({})
 
 async function load() {
-  const { data } = await axios.get('/api/process/efficiency')
+  const data = await fetchProcessEfficiency()
   option.value = {
     series: [
       {
@@ -40,7 +41,7 @@ async function load() {
     tooltip: { show: true }
   }
 }
-onMounted(load)
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>

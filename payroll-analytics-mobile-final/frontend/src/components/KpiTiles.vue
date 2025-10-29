@@ -11,26 +11,36 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { fetchKpis, type Kpis } from '../api'
+import { ref } from 'vue'
+import { fetchKpisAll, fetchKpis, type Kpis } from '../api'
+import { useFiltersReload } from '../composables/useFiltersReload'
+import { useFilters } from '../stores/filters' // Corrected import path
 
 const model = ref<Kpis | null>(null)
 const kpis = ref<any[]>([])
+const filters = useFilters()
 
 async function load() {
-  model.value = await fetchKpis()
+  if (filters.from && filters.to) {
+    model.value = await fetchKpis(filters.from.toISOString().split('T')[0], filters.to.toISOString().split('T')[0])
+  } else {
+    model.value = await fetchKpisAll()
+  }
+  
   if (!model.value) return
   kpis.value = [
     { label: 'Headcount', value: model.value.headcount.toLocaleString() },
-    { label: 'Hires (MTD)', value: model.value.hiresMtd },
-    { label: 'Exits (MTD)', value: model.value.exitsMtd },
+    { label: 'New Hires', value: model.value.newHires.toLocaleString() },
+    { label: 'Terminations', value: model.value.terminations.toLocaleString() },
+    { label: 'Overall Cost', value: `$${Math.round(model.value.overallCost).toLocaleString()}` },
+    { label: 'Overtime Cost', value: `$${Math.round(model.value.overtimeCost).toLocaleString()}` },
     { label: 'Overtime %', value: model.value.overtimePct.toFixed(1), suffix: '%' },
-    { label: 'Avg Salary', value: `$${Math.round(model.value.avgSalary).toLocaleString()}` }
+    { label: 'Avg Salary', value: `$${Math.round(model.value.averageSalary).toLocaleString()}` },
+    { label: 'Turnover Rate', value: model.value.turnoverRate.toFixed(1), suffix: '%' },
+    { label: 'Turnover Cost', value: `$${Math.round(model.value.turnoverCost).toLocaleString()}` },
   ]
 }
 
-onMounted(() => {
-  load()
-  window.addEventListener('filters.changed', load)
-})
+useFiltersReload(load)
+load()
 </script>

@@ -6,20 +6,21 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { PieChart } from 'echarts/charts'
 import { TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import axios from 'axios'
+import { fetchCostsTcow } from '../../api'
+import { useFiltersReload } from '../../composables/useFiltersReload'
 
 use([PieChart, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer])
 
 const option = ref<any>({})
 
 async function load() {
-  const { data } = await axios.get('/api/costs/tcow')
+  const data = await fetchCostsTcow()
   option.value = {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0 },
@@ -34,7 +35,7 @@ async function load() {
   }
 }
 
-onMounted(load)
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>

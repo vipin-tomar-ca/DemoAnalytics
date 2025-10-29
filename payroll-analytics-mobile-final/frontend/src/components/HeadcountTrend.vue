@@ -6,8 +6,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { fetchHeadcountTrend } from '../api'
+import { useFiltersReload } from '../composables/useFiltersReload'
 import { use } from 'echarts/core'
 import VChart from 'vue-echarts'
 import { LineChart, BarChart } from 'echarts/charts'
@@ -35,10 +36,7 @@ async function load() {
   }
 }
 
-onMounted(() => {
-  load()
-  window.addEventListener('filters.changed', load)
-})
+useFiltersReload(load)
 </script>
 
 <script lang="ts">export default { components: { 'v-chart': VChart } }</script>
